@@ -1,0 +1,13 @@
+flowchart TD
+    A["Customer chọn Chat tại Store"] --> B["Backend tìm Conversation"]
+    B --> C{"Đã tồn tại?"}
+    C -- "Chưa" --> D["Tạo Conversation"]
+    C -- "Có" --> E["Mở Conversation hiện có"]
+    D --> F["Gửi tin qua REST API"]
+    E --> F
+    F --> G["Xác thực thành viên"]
+    G --> H{"Có quyền gửi?"}
+    H -- "Không" --> I["Từ chối truy cập"]
+    H -- "Có" --> J["Lưu Message vào MySQL"]
+    J --> K["Frontend tải tin nhắn mới"]
+    K --> L["Mở rộng: WebSocket đẩy tin"]

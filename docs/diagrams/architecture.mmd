@@ -1,0 +1,11 @@
+flowchart TB
+    U[Customer / Seller / Admin] --> FE[ReactJS + Vite]
+    FE --> API[Spring Boot REST API]
+    API --> SEC[Security / JWT]
+    API --> MOD[Modular Monolith]
+    MOD --> SVC[Service Layer + Transactions]
+    SVC --> REPO[Spring Data JPA Repositories]
+    REPO --> DB[(MariaDB / MySQL)]
+    SVC --> AI[External AI API]
+    SVC --> FILES[External Image/File Storage]
+    DB --- FLYWAY[Flyway migrations]

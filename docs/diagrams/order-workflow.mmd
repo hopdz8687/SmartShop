@@ -1,0 +1,16 @@
+flowchart TD
+    A[Customer chọn cartItemIds] --> B[Backend xác minh Cart ownership]
+    B --> C[Đọc lại giá, trạng thái, stock của Variant]
+    C --> D{Dữ liệu hợp lệ và đủ stock?}
+    D -- Không --> X[Rollback / trả lỗi]
+    D -- Có --> E[Group Cart Items theo Store]
+    E --> F[Tạo parent Order]
+    F --> G[Tạo Seller Order cho từng Store]
+    G --> H[Tạo Order Items với snapshot]
+    H --> I[Tạo Payment COD cho từng Seller Order]
+    I --> J[Atomic decrement stock theo Variant]
+    J --> K{Tất cả update thành công?}
+    K -- Không --> X
+    K -- Có --> L[Xóa selected Cart Items]
+    L --> M[Commit transaction]
+    M --> N[OrderService tổng hợp parent status]
