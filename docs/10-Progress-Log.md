@@ -14,7 +14,7 @@
 | Flyway migration trong repo ứng dụng | Đã có `V1__init_schema.sql` | Khớp DDL v2.1; `ddl-auto=none` |
 | Entity/Repository | Đang triển khai (Task 01 hoàn thành) | Đã hoàn thành `User`, `Role`, `UserRole` + Repository + Integration Test |
 | Spring Security/JWT | Đã triển khai (Task 02 hoàn thành) | JJWT 0.12.6, Register/Login/Logout, `/api/v1/users/me`, RBAC |
-| ReactJS Frontend | Chưa xác nhận đã khởi tạo | Công nghệ đã chốt; dự kiến triển khai UI trước bằng Mock Data sau API contract |
+| ReactJS Frontend | Đang triển khai (Task 03 hoàn thành) | Login, Register, Account (`/api/v1/users/me`), JWT Axios + TanStack Query |
 | AI integration | Chưa triển khai | MVP theo flow hai bước |
 | Automated tests | Chưa triển khai | Phải thêm theo từng module |
 | Docker/CI/CD/Deployment | Chưa triển khai | Để giai đoạn sau |
@@ -132,3 +132,21 @@ Mỗi lần cập nhật phải ghi ngày, thay đổi thực tế, file/module 
   - Refresh token và email verification chưa triển khai (ngoài phạm vi Task 02).
 - **Bước tiếp theo**:
   - Triển khai các module tiếp theo theo kế hoạch (`Address`, `SellerApplication`/`Store`, `Category`/`Product`).
+
+### Task 03 – Frontend Authentication
+- **Thay đổi thực tế**:
+  - Cập nhật Design System token SmartShop trong `frontend/src/index.css` theo định hướng UI UX Pro Max (Emerald `#059669`, nền sáng, độ tương phản cao, Tailwind CSS v4).
+  - Thêm các component shadcn/ui chuẩn (`input`, `label`, `card`, `alert`) và tạo `AuthLayout`, `PasswordInput`.
+  - Triển khai `tokenStorage`, `apiClient` (tự động gắn Bearer JWT, xử lý 401 phân biệt lỗi phiên đăng nhập với lỗi nghiệp vụ/login), `authApi`, `authSchemas` (Zod), `AuthProvider` + `useAuth` (TanStack Query `/users/me`, stateless logout).
+  - Triển khai `LoginPage`, `RegisterPage` (CUSTOMER), `AccountPage` (hỗ trợ `CUSTOMER`, `SELLER`, `ADMIN`), và `ProtectedRoute` / `PublicOnlyRoute` / `AppRouter`.
+- **File / module ảnh hưởng**:
+  - `frontend/src/index.css`, `frontend/src/App.jsx`
+  - `frontend/src/components/ui/{input,label,card,alert}.jsx`, `frontend/src/components/layout/AuthLayout.jsx`
+  - `frontend/src/lib/tokenStorage.js`, `frontend/src/services/apiClient.js`, `frontend/src/stores/{authContext,authContextObject}.{jsx,js}`, `frontend/src/hooks/useAuth.js`
+  - `frontend/src/features/auth/**`, `frontend/src/routes/**`
+- **Lệnh & kết quả kiểm thử**:
+  - Chạy `npm run lint` (`oxlint`) và `npm run build` (`vite build`) tại `frontend/`: **PASS** (0 errors; Vite production build thành công).
+- **Chưa xác minh / Lưu ý**:
+  - Chưa chạy kiểm thử trình duyệt end-to-end (E2E) kết nối trực tiếp frontend với backend server đang chạy (`localhost:8080`).
+- **Bước tiếp theo**:
+  - Chạy backend + frontend để nghiệm thu luồng đăng ký, đăng nhập, `/account`, đăng xuất trên trình duyệt trước khi sang module tiếp theo.
