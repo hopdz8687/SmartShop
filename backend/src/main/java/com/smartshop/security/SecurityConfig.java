@@ -56,9 +56,13 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/stores/{id}").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/seller/**").hasRole("SELLER")
                 .requestMatchers("/api/v1/users/me").hasAnyRole("CUSTOMER", "SELLER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/v1/seller-applications").hasRole("CUSTOMER")
+                .requestMatchers(HttpMethod.PUT, "/api/v1/seller-applications/*/cancel").hasRole("CUSTOMER")
+                .requestMatchers(HttpMethod.GET, "/api/v1/seller-applications/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
                 .anyRequest().authenticated()
             )

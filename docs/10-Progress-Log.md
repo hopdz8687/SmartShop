@@ -150,3 +150,64 @@ Mỗi lần cập nhật phải ghi ngày, thay đổi thực tế, file/module 
   - Chưa chạy kiểm thử trình duyệt end-to-end (E2E) kết nối trực tiếp frontend với backend server đang chạy (`localhost:8080`).
 - **Bước tiếp theo**:
   - Chạy backend + frontend để nghiệm thu luồng đăng ký, đăng nhập, `/account`, đăng xuất trên trình duyệt trước khi sang module tiếp theo.
+
+
+### Task 04 – Store & Seller Module (Backend)
+
+**Ngày hoàn thành:** 28/11/2026
+
+- **Phạm vi**: Backend-only. Toàn bộ luồng đăng ký Seller, duyệt/từ chối hồ sơ, quản lý Store, và public Store API.
+
+- **File tạo mới**:
+
+  *Entities:*
+  - `backend/.../store/entity/SellerApplicationStatus.java` — Enum: PENDING, APPROVED, REJECTED, CANCELLED
+  - `backend/.../store/entity/SellerApplication.java` — Maps `seller_applications`; FK → users (applicant + reviewer)
+  - `backend/.../store/entity/StoreStatus.java` — Enum: ACTIVE, INACTIVE, SUSPENDED
+  - `backend/.../store/entity/Store.java` — Maps `stores`; `uk_stores_user` (1 store/seller), `uk_stores_slug`
+
+  *Repositories:*
+  - `SellerApplicationRepository.java` — Conditional JPQL updates: `approveIfPending`, `rejectIfPending`, `cancelIfPendingAndOwned`
+  - `StoreRepository.java` — `findByUserId`, `existsByUserId`, `existsBySlug`, `findByIdAndStatusAndDeletedAtIsNull`
+
+  *DTOs:*
+  - `CreateSellerApplicationRequest`, `RejectSellerApplicationRequest`, `SellerApplicationResponse`
+  - `UpdateStoreRequest`, `StoreResponse`, `PublicStoreResponse`
+
+  *Services:*
+  - `SellerApplicationService.java` — submit, cancel, getMyApplications, admin CRUD, approve (fully transactional), reject
+  - `StoreService.java` — createStoreForApprovedSeller (slug gen + collision retry), getMyStore, updateMyStore, getPublicStore
+
+  *Controllers:*
+  - `SellerApplicationController.java` — `POST /api/v1/seller-applications`, `GET /me`, `PUT /{id}/cancel`
+  - `AdminSellerApplicationController.java` — `GET/PUT /api/v1/admin/seller-applications/**`
+  - `SellerStoreController.java` — `GET/PUT /api/v1/seller/stores/me`
+  - `PublicStoreController.java` — `GET /api/v1/stores/{id}` (no auth)
+
+  *Tests:*
+  - `StoreAndSellerIntegrationTest.java` — 20 test cases across 8 `@Nested` groups
+
+- **File chỉnh sửa**:
+  - `SecurityConfig.java` — Thêm: `GET /api/v1/stores/{id}` → permitAll; `POST /api/v1/seller-applications` và `PUT /api/v1/seller-applications/*/cancel` → hasRole(CUSTOMER); `GET /api/v1/seller-applications/me` → authenticated
+
+- **Lệnh & kết quả kiểm thử**:
+  - `mvnw.cmd clean test` — **BUILD SUCCESS**
+  - **Tests run: 39, Failures: 0, Errors: 0, Skipped: 0** (15 cũ Task 01–02 + 4 cũ Task 03 JwtServiceTest/UserRole + 20 mới Task 04)
+
+- **Nghiệp vụ đã xác minh**:
+  - Approve tạo Store + cấp SELLER role trong cùng transaction; rollback toàn bộ nếu thất bại.
+  - Conditional update (approve/reject/cancel) dùng JPQL `@Modifying`; trả 409 nếu trạng thái không hợp lệ.
+  - Slug được tạo từ `businessName` (normalize diacritics, lowercase, strip non-alnum), retry + UUID suffix nếu trùng.
+  - `uk_stores_user` đảm bảo 1 Store/Seller; `DataIntegrityViolationException` được bắt an toàn.
+  - Customer chỉ hủy hồ sơ của chính mình khi trạng thái PENDING.
+  - `GET /api/v1/stores/{id}` chỉ trả Store ACTIVE + deletedAt IS NULL; không lộ userId.
+  - Seller routes được bảo vệ; Customer nhận 403 khi truy cập `/api/v1/seller/**`.
+
+- **Chưa xác minh / Lưu ý**:
+  - Chưa chạy kiểm thử end-to-end trên browser kết nối backend thực.
+  - `GET /api/v1/stores` (danh sách cửa hàng) chưa triển khai theo kế hoạch MVP (chỉ có `/{id}`).
+  - Seller Application list của Admin (`GET /api/v1/admin/seller-applications`) trả Page; sort và filter nâng cao để mở rộng sau.
+
+- **Bước tiếp theo**:
+  - Frontend Task 04: giao diện đăng ký Seller, Admin duyệt/từ chối, Seller quản lý Store.
+  - Hoặc tiếp tục backend: Category, Product, Product Variant.
