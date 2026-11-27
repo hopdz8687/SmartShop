@@ -11,9 +11,9 @@
 | Database schema v2.1 | Đã chốt để triển khai | 24 bảng; MariaDB 10.11 import test được báo cáo thành công |
 | Tài liệu AI agent | Đã bổ sung | AGENTS.md, Copilot, Antigravity rules |
 | Spring Boot project | Chưa xác nhận đã khởi tạo | Chuẩn bị môi trường và khởi tạo sau khi kiểm tra toolchain |
-| Flyway migration trong repo ứng dụng | Chưa xác nhận | Cần đưa DDL đã duyệt vào migration |
-| Entity/Repository | Chưa triển khai | Bắt đầu User/Role/UserRole |
-| Spring Security/JWT | Chưa triển khai | Sau khi DB connection và user mapping ổn |
+| Flyway migration trong repo ứng dụng | Đã có `V1__init_schema.sql` | Khớp DDL v2.1; `ddl-auto=none` |
+| Entity/Repository | Đang triển khai (Task 01 hoàn thành) | Đã hoàn thành `User`, `Role`, `UserRole` + Repository + Integration Test |
+| Spring Security/JWT | Đã triển khai (Task 02 hoàn thành) | JJWT 0.12.6, Register/Login/Logout, `/api/v1/users/me`, RBAC |
 | ReactJS Frontend | Chưa xác nhận đã khởi tạo | Công nghệ đã chốt; dự kiến triển khai UI trước bằng Mock Data sau API contract |
 | AI integration | Chưa triển khai | MVP theo flow hai bước |
 | Automated tests | Chưa triển khai | Phải thêm theo từng module |
@@ -91,3 +91,44 @@ Giới hạn: đây là kết quả được báo cáo từ lần chạy MariaDB
 
 ## 10.8. Quy tắc ghi tiến độ
 Mỗi lần cập nhật phải ghi ngày, thay đổi thực tế, file/module ảnh hưởng, lệnh/test đã chạy, kết quả quan sát, vấn đề chưa xác minh và bước tiếp theo. Không đánh dấu hoàn thành chỉ vì code đã được sinh ra; phải build/test phù hợp.
+
+---
+
+## 10.9. Nhật ký triển khai – 28/11/2026
+
+### Task 01 – User / Role / UserRole
+- **Thay đổi thực tế**:
+  - Tạo JPA Entity khớp DDL v2.1 (`V1__init_schema.sql`): `UserStatus`, `User` (`users`), `Role` (`roles`), `UserRoleId` (`@Embeddable`), `UserRole` (`user_roles` dùng `@EmbeddedId` + `@MapsId`, không thêm cột ID giả).
+  - Tạo Repository: `UserRepository`, `RoleRepository`, `UserRoleRepository` (có `JOIN FETCH` tránh N+1).
+  - Tạo Integration Test `UserRoleIntegrationTest` (`@Transactional(readOnly = true)`, dùng `Assumptions` kiểm tra sự tồn tại của dữ liệu, không xóa/reset `smartshop_dev`).
+- **File / module ảnh hưởng**:
+  - `backend/src/main/java/com/smartshop/modules/user/entity/{UserStatus,User,Role,UserRoleId,UserRole}.java`
+  - `backend/src/main/java/com/smartshop/modules/user/repository/{UserRepository,RoleRepository,UserRoleRepository}.java`
+  - `backend/src/test/java/com/smartshop/modules/user/UserRoleIntegrationTest.java`
+- **Lệnh & kết quả kiểm thử**:
+  - Chạy `mvnw.cmd clean test` tại `backend/`: **BUILD SUCCESS** — `Tests run: 4, Failures: 0, Errors: 0, Skipped: 0` (`BackendApplicationTests`: 1/1 pass; `UserRoleIntegrationTest`: 3/3 pass trên datasource `smartshop_dev`).
+- **Chưa xác minh / Lưu ý**:
+  - Chưa triển khai thao tác ghi (insert/update) từ Java xuống DB trong task này; mới kiểm thử đọc dữ liệu seed với `@Transactional(readOnly = true)`.
+- **Bước tiếp theo**:
+  - Triển khai các Entity/Repository tiếp theo hoặc lớp Auth/JWT khi có chỉ định.
+
+### Task 02 – Authentication & JWT
+- **Thay đổi thực tế**:
+  - Thêm `jjwt-api`, `jjwt-impl`, `jjwt-jackson` (`0.12.6`) vào `backend/pom.xml`.
+  - Triển khai `ApiResponse`, `BusinessException`/`DuplicateResourceException`/`ResourceNotFoundException` và `GlobalExceptionHandler`.
+  - Triển khai `JwtProperties`, `CorsProperties`, `JwtService` (yêu cầu `JWT_SECRET` từ env >= 32 bytes, từ chối khởi động nếu thiếu/ngắn), `CustomUserDetails`, `CustomUserDetailsService`, `JwtAuthenticationFilter` (tải lại trạng thái + role từ DB trên mỗi request), `RestAuthenticationEntryPoint`, `RestAccessDeniedHandler`, `SecurityConfig` (stateless, CORS cấu hình explicit origin).
+  - Triển khai `POST /api/v1/auth/register` (chỉ cấp `CUSTOMER` từ DB, BCrypt, `@Transactional`, bắt trùng email qua pre-check và `DataIntegrityViolationException`), `POST /api/v1/auth/login`, `POST /api/v1/auth/logout` (stateless), và `GET /api/v1/users/me`.
+- **File / module ảnh hưởng**:
+  - `backend/pom.xml`, `backend/src/main/resources/application.properties`, `backend/src/test/resources/application.properties`
+  - `backend/src/main/java/com/smartshop/common/**`
+  - `backend/src/main/java/com/smartshop/security/**`
+  - `backend/src/main/java/com/smartshop/modules/auth/**`
+  - `backend/src/main/java/com/smartshop/modules/user/{dto/UserResponse,service/UserService,controller/UserController}.java`
+  - `backend/src/test/java/com/smartshop/security/JwtServiceTest.java`, `backend/src/test/java/com/smartshop/modules/auth/AuthControllerIntegrationTest.java`
+- **Lệnh & kết quả kiểm thử**:
+  - Chạy `mvnw.cmd clean test` tại `backend/`: **BUILD SUCCESS** — `Tests run: 15, Failures: 0, Errors: 0, Skipped: 0` (`BackendApplicationTests`: 1/1, `AuthControllerIntegrationTest`: 6/6, `UserRoleIntegrationTest`: 3/3, `JwtServiceTest`: 5/5).
+- **Chưa xác minh / Lưu ý**:
+  - Logout ở MVP là stateless (Client tự xóa token; chưa có blacklist/revocation phía server).
+  - Refresh token và email verification chưa triển khai (ngoài phạm vi Task 02).
+- **Bước tiếp theo**:
+  - Triển khai các module tiếp theo theo kế hoạch (`Address`, `SellerApplication`/`Store`, `Category`/`Product`).
