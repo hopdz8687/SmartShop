@@ -2,6 +2,9 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AccountPage } from '@/features/auth/pages/AccountPage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { RegisterPage } from '@/features/auth/pages/RegisterPage'
+import { AdminSellerApplicationsPage } from '@/features/store/pages/AdminSellerApplicationsPage'
+import { SellerApplicationPage } from '@/features/store/pages/SellerApplicationPage'
+import { SellerStorePage } from '@/features/store/pages/SellerStorePage'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { PublicOnlyRoute } from '@/routes/PublicOnlyRoute'
 
@@ -16,6 +19,21 @@ export function AppRouter() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/account" element={<AccountPage />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['CUSTOMER']} />}>
+          <Route path="/seller-application" element={<SellerApplicationPage />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['SELLER']} />}>
+          <Route path="/seller/store" element={<SellerStorePage />} />
+        </Route>
+
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+          <Route
+            path="/admin/seller-applications"
+            element={<AdminSellerApplicationsPage />}
+          />
         </Route>
 
         <Route path="/" element={<Navigate to="/account" replace />} />

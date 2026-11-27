@@ -1,15 +1,15 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   CheckCircle2,
-  Loader2,
-  LogOut,
+  ClipboardCheck,
   Mail,
   Phone,
   Shield,
-  ShoppingBag,
+  Store,
   User as UserIcon,
+  UserCheck,
 } from 'lucide-react'
+import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -34,48 +34,18 @@ const STATUS_BADGE_CLASSES = {
 }
 
 export function AccountPage() {
-  const navigate = useNavigate()
-  const { user, logout } = useAuth()
-  const [loggingOut, setLoggingOut] = useState(false)
+  const { user } = useAuth()
+  const roles = user?.roles || []
+  const isCustomer = roles.includes('CUSTOMER')
+  const isSeller = roles.includes('SELLER')
+  const isAdmin = roles.includes('ADMIN')
 
   const statusBadgeClass =
     STATUS_BADGE_CLASSES[user?.status] || 'bg-secondary text-secondary-foreground border-border'
 
-  const handleLogout = async () => {
-    setLoggingOut(true)
-    await logout()
-    navigate('/login', { replace: true })
-  }
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <ShoppingBag className="size-4" aria-hidden="true" />
-            </span>
-            <span className="text-lg font-bold tracking-tight">SmartShop</span>
-          </div>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="cursor-pointer"
-          >
-            {loggingOut ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <LogOut className="size-4" aria-hidden="true" />
-            )}
-            Đăng xuất
-          </Button>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
+    <AppShell>
+      <div className="space-y-6">
         <Card className="shadow-sm border-border/80">
           <CardHeader className="border-b border-border/60 pb-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -130,7 +100,7 @@ export function AccountPage() {
                   Vai trò (Roles)
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {(user?.roles || []).map((role) => (
+                  {roles.map((role) => (
                     <span
                       key={role}
                       className="inline-flex items-center rounded-md bg-secondary px-2.5 py-1 text-xs font-semibold text-secondary-foreground border border-blue-200/80"
@@ -143,7 +113,44 @@ export function AccountPage() {
             </div>
           </CardContent>
         </Card>
-      </main>
-    </div>
+
+        {(isCustomer || isSeller || isAdmin) && (
+          <Card className="border-border/80 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Truy cập nhanh Store & Seller</CardTitle>
+              <CardDescription>
+                Chức năng khả dụng theo vai trò tài khoản của bạn.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3">
+              {isCustomer && (
+                <Button asChild variant="outline">
+                  <Link to="/seller-application">
+                    <UserCheck className="size-4 text-primary" aria-hidden="true" />
+                    Đăng ký bán hàng
+                  </Link>
+                </Button>
+              )}
+              {isSeller && (
+                <Button asChild>
+                  <Link to="/seller/store">
+                    <Store className="size-4" aria-hidden="true" />
+                    Quản lý cửa hàng
+                  </Link>
+                </Button>
+              )}
+              {isAdmin && (
+                <Button asChild variant="outline">
+                  <Link to="/admin/seller-applications">
+                    <ClipboardCheck className="size-4 text-primary" aria-hidden="true" />
+                    Duyệt hồ sơ Seller
+                  </Link>
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </AppShell>
   )
 }
