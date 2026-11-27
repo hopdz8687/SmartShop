@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   ClipboardCheck,
+  FolderTree,
   Loader2,
   LogOut,
+  Package,
   ShoppingBag,
   Store,
   User as UserIcon,
@@ -51,6 +53,11 @@ export function AppShell({ children }) {
             aria-label="Điều hướng chính"
             className="order-3 flex w-full flex-wrap items-center gap-1 border-t border-border/60 pt-2 sm:order-2 sm:w-auto sm:border-t-0 sm:pt-0"
           >
+            <NavLink to="/products" className={navLinkClass}>
+              <ShoppingBag className="size-4" aria-hidden="true" />
+              Sản phẩm
+            </NavLink>
+
             <NavLink to="/account" className={navLinkClass}>
               <UserIcon className="size-4" aria-hidden="true" />
               Tài khoản
@@ -64,17 +71,29 @@ export function AppShell({ children }) {
             )}
 
             {isSeller && (
-              <NavLink to="/seller/store" className={navLinkClass}>
-                <Store className="size-4" aria-hidden="true" />
-                Cửa hàng
-              </NavLink>
+              <>
+                <NavLink to="/seller/products" className={navLinkClass}>
+                  <Package className="size-4" aria-hidden="true" />
+                  QL Sản phẩm
+                </NavLink>
+                <NavLink to="/seller/store" className={navLinkClass}>
+                  <Store className="size-4" aria-hidden="true" />
+                  Cửa hàng
+                </NavLink>
+              </>
             )}
 
             {isAdmin && (
-              <NavLink to="/admin/seller-applications" className={navLinkClass}>
-                <ClipboardCheck className="size-4" aria-hidden="true" />
-                Duyệt Seller
-              </NavLink>
+              <>
+                <NavLink to="/admin/categories" className={navLinkClass}>
+                  <FolderTree className="size-4" aria-hidden="true" />
+                  Danh mục
+                </NavLink>
+                <NavLink to="/admin/seller-applications" className={navLinkClass}>
+                  <ClipboardCheck className="size-4" aria-hidden="true" />
+                  Duyệt Seller
+                </NavLink>
+              </>
             )}
           </nav>
 
