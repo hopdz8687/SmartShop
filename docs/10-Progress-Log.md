@@ -351,3 +351,23 @@ Mỗi lần cập nhật phải ghi ngày, thay đổi thực tế, file/module 
   - Chưa chạy kiểm thử trình duyệt E2E kết nối trực tiếp với backend server đang chạy (`localhost:8080`).
 - **Bước tiếp theo**:
   - Triển khai các phần tiếp theo của Task 07 (Seller Order Management, Hủy đơn hàng, Shipment & COD confirmation).
+
+### Task 07.3 – Backend Seller Order Management
+
+**Ngày hoàn thành:** 28/11/2026
+
+- **Phạm vi API**:
+  - `GET /api/v1/seller/orders`: Danh sách đơn của Store hiện tại (phân trang, mới nhất trước).
+  - `GET /api/v1/seller/orders/{id}`: Chi tiết Seller Order (kèm snapshot địa chỉ từ Order cha, Items, Payment COD).
+  - `PUT /api/v1/seller/orders/{id}/confirm`: Chuyển trạng thái có điều kiện `PENDING` → `CONFIRMED`.
+  - `PUT /api/v1/seller/orders/{id}/processing`: Chuyển trạng thái có điều kiện `CONFIRMED` → `PROCESSING`.
+- **File tạo mới / chỉnh sửa**:
+  - [SellerOrderRepository.java](file:///c:/Projects/SmartShop/backend/src/main/java/com/smartshop/modules/order/repository/SellerOrderRepository.java) (bổ sung truy vấn theo `storeId`, `orderId` và `transitionStatusIfExpected`).
+  - [SellerOrderManageResponse.java](file:///c:/Projects/SmartShop/backend/src/main/java/com/smartshop/modules/order/dto/SellerOrderManageResponse.java).
+  - [OrderService.java](file:///c:/Projects/SmartShop/backend/src/main/java/com/smartshop/modules/order/service/OrderService.java) (bổ sung quản lý đơn Seller và hàm `recalculateParentOrderStatus` đồng bộ `orders.order_status`).
+  - [SellerOrderController.java](file:///c:/Projects/SmartShop/backend/src/main/java/com/smartshop/modules/order/controller/SellerOrderController.java).
+  - [SellerOrderIntegrationTest.java](file:///c:/Projects/SmartShop/backend/src/test/java/com/smartshop/modules/order/SellerOrderIntegrationTest.java).
+- **Lệnh & kết quả kiểm thử**:
+  - `.\mvnw.cmd test`: **BUILD SUCCESS** — **Tests run: 53, Failures: 0, Errors: 0, Skipped: 0** (thêm 2 test kiểm tra danh sách/chi tiết theo Store, chuyển trạng thái `PENDING -> CONFIRMED -> PROCESSING`, đồng bộ Order tổng sang `PROCESSING`, chặn thao tác lặp/sai trạng thái `409`, chặn Store khác/Customer/Admin `403`, và `401` khi chưa đăng nhập).
+- **Chưa xử lý / Lưu ý**:
+  - Chưa triển khai hủy đơn (`cancel`), giao hàng (`ship`/`Shipment`) và thu tiền COD (thuộc các task tiếp theo).
