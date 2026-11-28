@@ -11,6 +11,8 @@ import { SellerProductsPage } from '@/features/catalog/pages/SellerProductsPage'
 import { CheckoutPage } from '@/features/order/pages/CheckoutPage'
 import { OrderDetailPage } from '@/features/order/pages/OrderDetailPage'
 import { OrdersPage } from '@/features/order/pages/OrdersPage'
+import { SellerOrderDetailPage } from '@/features/order/pages/SellerOrderDetailPage'
+import { SellerOrdersPage } from '@/features/order/pages/SellerOrdersPage'
 import { AdminSellerApplicationsPage } from '@/features/store/pages/AdminSellerApplicationsPage'
 import { SellerApplicationPage } from '@/features/store/pages/SellerApplicationPage'
 import { SellerStorePage } from '@/features/store/pages/SellerStorePage'
@@ -42,6 +44,8 @@ export function AppRouter() {
 
         <Route element={<ProtectedRoute allowedRoles={['SELLER']} />}>
           <Route path="/seller/store" element={<SellerStorePage />} />
+          <Route path="/seller/orders" element={<SellerOrdersPage />} />
+          <Route path="/seller/orders/:id" element={<SellerOrderDetailPage />} />
           <Route path="/seller/products" element={<SellerProductsPage />} />
           <Route path="/seller/products/new" element={<SellerProductFormPage />} />
           <Route path="/seller/products/:id" element={<SellerProductFormPage />} />

@@ -371,3 +371,23 @@ Mỗi lần cập nhật phải ghi ngày, thay đổi thực tế, file/module 
   - `.\mvnw.cmd test`: **BUILD SUCCESS** — **Tests run: 53, Failures: 0, Errors: 0, Skipped: 0** (thêm 2 test kiểm tra danh sách/chi tiết theo Store, chuyển trạng thái `PENDING -> CONFIRMED -> PROCESSING`, đồng bộ Order tổng sang `PROCESSING`, chặn thao tác lặp/sai trạng thái `409`, chặn Store khác/Customer/Admin `403`, và `401` khi chưa đăng nhập).
 - **Chưa xử lý / Lưu ý**:
   - Chưa triển khai hủy đơn (`cancel`), giao hàng (`ship`/`Shipment`) và thu tiền COD (thuộc các task tiếp theo).
+
+### Task 07.4 – Frontend Seller Order Management
+
+**Ngày hoàn thành:** 28/11/2026
+
+- **Thay đổi thực tế**:
+  - Bổ sung `getSellerOrders`, `getSellerOrderDetail`, `confirmSellerOrder` (`PUT /seller/orders/{id}/confirm`) và `startProcessingSellerOrder` (`PUT /seller/orders/{id}/processing`) vào `orderApi.js`.
+  - Tạo `SellerOrdersPage.jsx` (`/seller/orders`): danh sách đơn hàng của Store phân trang, mới nhất trước, hiển thị mã đơn con/cha, trạng thái đơn & COD tiếng Việt, thông tin người nhận/địa chỉ, nút thao tác nhanh (`Xác nhận đơn`, `Chuẩn bị hàng`), skeleton, empty state và error state.
+  - Tạo `SellerOrderDetailPage.jsx` (`/seller/orders/:id`): thanh tiến trình xử lý đơn (`PENDING → CONFIRMED → PROCESSING → SHIPPED`), danh sách sản phẩm snapshot, thông tin người nhận, tổng tiền COD và khu vực thao tác nổi bật có loading/disabled & feedback.
+  - Cập nhật `AppShell.jsx` (thêm menu **Đơn hàng** cho `SELLER`) và `AppRouter.jsx` (bảo vệ `/seller/orders` và `/seller/orders/:id` cho `SELLER`).
+- **File tạo mới / chỉnh sửa**:
+  - `frontend/src/features/order/{api/orderApi.js,pages/SellerOrdersPage.jsx,pages/SellerOrderDetailPage.jsx}`
+  - `frontend/src/components/layout/AppShell.jsx`, `frontend/src/routes/AppRouter.jsx`
+- **Lệnh & kết quả kiểm thử**:
+  - `npm.cmd run lint` (`oxlint`): **PASS** (0 errors, 3 warnings có sẵn từ Task 04/05).
+  - `npm.cmd run build` (`vite build`): **PASS** (1.92s).
+- **Chưa xác minh / Lưu ý**:
+  - Chưa chạy kiểm thử trình duyệt E2E kết nối trực tiếp với backend server đang chạy (`localhost:8080`).
+- **Bước tiếp theo**:
+  - Triển khai hủy đơn hàng (Customer & Seller cancellation + hoàn kho) và Shipment/COD.

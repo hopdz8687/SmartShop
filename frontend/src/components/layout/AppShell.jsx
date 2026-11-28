@@ -84,6 +84,10 @@ export function AppShell({ children }) {
 
             {isSeller && (
               <>
+                <NavLink to="/seller/orders" className={navLinkClass}>
+                  <ClipboardCheck className="size-4" aria-hidden="true" />
+                  Đơn hàng
+                </NavLink>
                 <NavLink to="/seller/products" className={navLinkClass}>
                   <Package className="size-4" aria-hidden="true" />
                   QL Sản phẩm
