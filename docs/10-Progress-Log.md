@@ -313,3 +313,20 @@ Mỗi lần cập nhật phải ghi ngày, thay đổi thực tế, file/module 
   - Chưa chạy kiểm thử E2E trên trình duyệt kết nối trực tiếp với backend server đang chạy (`localhost:8080`).
 - **Bước tiếp theo**:
   - Kiểm thử luồng E2E từ xem sản phẩm → thêm giỏ → checkout đa cửa hàng, sau đó triển khai Task 07 (Order History, Seller Order Management, Cancellation & Shipment/COD).
+
+### Task 07.1 – Backend Order History
+
+**Ngày hoàn thành:** 28/11/2026
+
+- **Phạm vi**:
+  - `GET /api/v1/orders/my`: Customer xem lịch sử đơn hàng của chính mình (phân trang, sắp xếp mới nhất).
+  - `GET /api/v1/orders/{id}`: Customer xem chi tiết đơn hàng của chính mình (Order + Seller Orders + Order Items + địa chỉ snapshot + Payment COD).
+- **File tạo mới / chỉnh sửa**:
+  - `backend/.../order/service/OrderService.java` (batch-load `SellerOrder`, `OrderItem`, `Payment` tránh N+1; kiểm tra quyền sở hữu `403` / `404`).
+  - `backend/.../order/controller/OrderController.java` (bổ sung `GET /my` và `GET /{id}`).
+  - `backend/.../order/repository/{OrderRepository,SellerOrderRepository,OrderItemRepository,PaymentRepository}.java` (bổ sung các query phân trang & batch `In`).
+  - `backend/src/test/java/com/smartshop/modules/order/OrderHistoryIntegrationTest.java`.
+- **Lệnh & kết quả kiểm thử**:
+  - `.\mvnw.cmd test`: **BUILD SUCCESS** — **Tests run: 51, Failures: 0, Errors: 0, Skipped: 0** (thêm 2 test mới kiểm tra danh sách phân trang, chi tiết đầy đủ, lỗi 404 không tồn tại và 403 truy cập đơn người khác).
+- **Chưa xác minh / Lưu ý**:
+  - Chưa triển khai Seller Order Management, Cancellation và Shipment (thuộc các task sau của Task 07).

@@ -11,5 +11,8 @@ public interface SellerOrderRepository extends JpaRepository<SellerOrder, Long> 
     @EntityGraph(attributePaths = {"store"})
     List<SellerOrder> findWithStoreByOrderIdOrderByIdAsc(Long orderId);
 
+    @EntityGraph(attributePaths = {"store"})
+    List<SellerOrder> findWithStoreByOrderIdInOrderByIdAsc(List<Long> orderIds);
+
     boolean existsBySellerOrderCode(String sellerOrderCode);
 }
