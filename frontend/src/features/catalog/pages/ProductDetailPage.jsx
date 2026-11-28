@@ -1,26 +1,40 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
   AlertCircle,
   ArrowLeft,
   CheckCircle2,
   Loader2,
+  Minus,
   Package,
+  Plus,
+  ShoppingCart,
   Store,
   Tag,
+  Zap,
 } from 'lucide-react'
 import { AppShell } from '@/components/layout/AppShell'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { cartApi } from '@/features/cart/api/cartApi'
+import { CART_QUERY_KEY } from '@/features/cart/hooks/useCart'
 import { catalogApi } from '@/features/catalog/api/catalogApi'
 import { formatCurrency } from '@/features/catalog/utils/catalogFormatters'
 
+const CHECKOUT_SELECTION_KEY = 'smartshop_checkout_cart_item_ids'
+
 export function ProductDetailPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [selectedVariantId, setSelectedVariantId] = useState(null)
   const [selectedImageUrl, setSelectedImageUrl] = useState(null)
+  const [quantity, setQuantity] = useState(1)
+  const [cartFeedback, setCartFeedback] = useState(null)
 
   const productQuery = useQuery({
     queryKey: ['public', 'products', 'detail', id],
@@ -47,6 +61,63 @@ export function ProductDetailPage() {
     images[0]?.imageUrl ||
     null
 
+  const maxStock = selectedVariant?.stockQuantity ?? 0
+  const isOutOfStock = !selectedVariant || maxStock <= 0
+  const clampedQty = isOutOfStock ? 1 : Math.min(Math.max(1, quantity), maxStock)
+
+  const addToCartMutation = useMutation({
+    mutationFn: ({ variantId, qty }) =>
+      cartApi.addItem({ variantId, quantity: qty }),
+    onMutate: () => setCartFeedback(null),
+    onSuccess: (res, variables) => {
+      if (res?.data) {
+        queryClient.setQueryData(CART_QUERY_KEY, res.data)
+      } else {
+        queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY })
+      }
+
+      if (variables.goToCheckout) {
+        const matched = (res?.data?.items || []).find(
+          (item) => item.variantId === variables.variantId,
+        )
+        const selectedIds = matched ? [matched.id] : []
+        if (selectedIds.length > 0) {
+          sessionStorage.setItem(CHECKOUT_SELECTION_KEY, JSON.stringify(selectedIds))
+          navigate('/checkout', { state: { selectedCartItemIds: selectedIds } })
+        } else {
+          navigate('/cart')
+        }
+        return
+      }
+
+      setCartFeedback({
+        type: 'success',
+        message: `Đã thêm ${variables.qty} sản phẩm vào giỏ hàng.`,
+      })
+    },
+    onError: (err) => {
+      setCartFeedback({
+        type: 'error',
+        message: err?.message || 'Không thể thêm sản phẩm vào giỏ hàng.',
+      })
+    },
+  })
+
+  const handleSelectVariant = (variant) => {
+    setSelectedVariantId(variant.id)
+    setQuantity(1)
+    setCartFeedback(null)
+  }
+
+  const handleAdd = (goToCheckout = false) => {
+    if (!selectedVariant || isOutOfStock) return
+    addToCartMutation.mutate({
+      variantId: selectedVariant.id,
+      qty: clampedQty,
+      goToCheckout,
+    })
+  }
+
   return (
     <AppShell>
       <div className="space-y-6">
@@ -60,9 +131,33 @@ export function ProductDetailPage() {
         </div>
 
         {productQuery.isLoading ? (
-          <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
-            <Loader2 className="size-5 animate-spin text-primary" aria-hidden="true" />
-            Đang tải chi tiết sản phẩm...
+          <div className="grid gap-6 lg:grid-cols-12" aria-busy="true" aria-label="Đang tải sản phẩm">
+            <div className="space-y-3 lg:col-span-5">
+              <Skeleton className="aspect-square w-full rounded-xl" />
+              <div className="flex gap-2">
+                <Skeleton className="size-16 rounded-lg" />
+                <Skeleton className="size-16 rounded-lg" />
+                <Skeleton className="size-16 rounded-lg" />
+              </div>
+            </div>
+            <div className="lg:col-span-7">
+              <Card className="border-border/80 shadow-sm">
+                <CardContent className="space-y-5 pt-6">
+                  <div className="flex gap-2">
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-6 w-32" />
+                  </div>
+                  <Skeleton className="h-8 w-3/4" />
+                  <Skeleton className="h-10 w-44" />
+                  <div className="flex gap-2 pt-2">
+                    <Skeleton className="h-14 w-28 rounded-lg" />
+                    <Skeleton className="h-14 w-28 rounded-lg" />
+                  </div>
+                  <Skeleton className="h-11 w-full rounded-lg" />
+                  <Skeleton className="h-24 w-full" />
+                </CardContent>
+              </Card>
+            </div>
           </div>
         ) : productQuery.isError ? (
           <Alert variant="destructive">
@@ -73,13 +168,21 @@ export function ProductDetailPage() {
             </AlertDescription>
           </Alert>
         ) : product ? (
-          <div className="grid gap-6 lg:grid-cols-12">
-            {/* Gallery */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.22 }}
+            className="grid gap-6 lg:grid-cols-12"
+          >
             <div className="space-y-3 lg:col-span-5">
               <Card className="overflow-hidden border-border/80 shadow-sm">
                 <div className="aspect-square w-full bg-muted/40">
                   {activeImageUrl ? (
-                    <img
+                    <motion.img
+                      key={activeImageUrl}
+                      initial={{ opacity: 0.6 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.2 }}
                       src={activeImageUrl}
                       alt={product.name}
                       className="h-full w-full object-cover"
@@ -120,7 +223,6 @@ export function ProductDetailPage() {
               )}
             </div>
 
-            {/* Info & Variants */}
             <div className="space-y-5 lg:col-span-7">
               <Card className="border-border/80 shadow-sm">
                 <CardContent className="space-y-5 pt-6">
@@ -145,26 +247,25 @@ export function ProductDetailPage() {
                       {product.name}
                     </h1>
                     {selectedVariant && (
-                      <p className="mt-3 text-3xl font-bold text-primary">
+                      <p className="mt-3 text-3xl font-bold text-primary tabular-nums">
                         {formatCurrency(selectedVariant.price)}
                       </p>
                     )}
                   </div>
 
-                  {/* Variant Picker */}
-                  {(product.variants || []).length > 0 && (
+                  {variants.length > 0 && (
                     <div className="space-y-2.5 border-t border-border/60 pt-4">
                       <p className="text-sm font-semibold text-foreground">
                         Phiên bản / Phân loại
                       </p>
                       <div className="flex flex-wrap gap-2">
-                        {product.variants.map((variant) => {
+                        {variants.map((variant) => {
                           const isSelected = selectedVariant?.id === variant.id
                           return (
                             <button
                               key={variant.id}
                               type="button"
-                              onClick={() => setSelectedVariantId(variant.id)}
+                              onClick={() => handleSelectVariant(variant)}
                               className={`cursor-pointer rounded-lg border px-3.5 py-2 text-left text-sm transition-all ${
                                 isSelected
                                   ? 'border-primary bg-secondary font-semibold text-primary ring-2 ring-primary/20'
@@ -172,7 +273,7 @@ export function ProductDetailPage() {
                               }`}
                             >
                               <div>{variant.variantName || variant.sku}</div>
-                              <div className="text-xs text-muted-foreground">
+                              <div className="text-xs text-muted-foreground tabular-nums">
                                 {formatCurrency(variant.price)}
                               </div>
                             </button>
@@ -206,7 +307,123 @@ export function ProductDetailPage() {
                     </div>
                   )}
 
-                  {/* Description */}
+                  {selectedVariant && (
+                    <div className="space-y-4 border-t border-border/60 pt-4">
+                      <div className="flex flex-wrap items-center gap-4">
+                        <span className="text-sm font-semibold text-foreground">
+                          Số lượng
+                        </span>
+                        <div className="inline-flex items-center rounded-lg border border-input bg-card">
+                          <button
+                            type="button"
+                            aria-label="Giảm số lượng"
+                            disabled={isOutOfStock || clampedQty <= 1}
+                            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                            className="flex size-9 cursor-pointer items-center justify-center text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <Minus className="size-3.5" aria-hidden="true" />
+                          </button>
+                          <span className="min-w-[2.5rem] text-center text-sm font-semibold tabular-nums">
+                            {clampedQty}
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Tăng số lượng"
+                            disabled={isOutOfStock || clampedQty >= maxStock}
+                            onClick={() => setQuantity((q) => Math.min(maxStock, q + 1))}
+                            className="flex size-9 cursor-pointer items-center justify-center text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            <Plus className="size-3.5" aria-hidden="true" />
+                          </button>
+                        </div>
+                        {!isOutOfStock && (
+                          <span className="text-xs text-muted-foreground">
+                            Tối đa {maxStock}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-2.5 sm:flex-row">
+                        <motion.div whileTap={{ scale: isOutOfStock ? 1 : 0.98 }} className="flex-1">
+                          <Button
+                            type="button"
+                            disabled={isOutOfStock || addToCartMutation.isPending}
+                            onClick={() => handleAdd(false)}
+                            className="h-10 w-full cursor-pointer text-sm font-semibold shadow-xs"
+                          >
+                            {addToCartMutation.isPending &&
+                            !addToCartMutation.variables?.goToCheckout ? (
+                              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                            ) : (
+                              <ShoppingCart className="size-4" aria-hidden="true" />
+                            )}
+                            {isOutOfStock ? 'Tạm hết hàng' : 'Thêm vào giỏ hàng'}
+                          </Button>
+                        </motion.div>
+
+                        <motion.div whileTap={{ scale: isOutOfStock ? 1 : 0.98 }} className="sm:w-44">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={isOutOfStock || addToCartMutation.isPending}
+                            onClick={() => handleAdd(true)}
+                            className="h-10 w-full cursor-pointer border-primary/40 text-sm font-semibold text-primary hover:bg-secondary"
+                          >
+                            {addToCartMutation.isPending &&
+                            addToCartMutation.variables?.goToCheckout ? (
+                              <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                            ) : (
+                              <Zap className="size-4" aria-hidden="true" />
+                            )}
+                            Mua ngay
+                          </Button>
+                        </motion.div>
+                      </div>
+
+                      <AnimatePresence>
+                        {cartFeedback && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            transition={{ duration: 0.18 }}
+                          >
+                            <Alert
+                              variant={cartFeedback.type === 'error' ? 'destructive' : 'default'}
+                              className={
+                                cartFeedback.type === 'success'
+                                  ? 'border-green-200 bg-green-50 text-green-800'
+                                  : 'border-red-200 bg-red-50 text-red-800'
+                              }
+                            >
+                              {cartFeedback.type === 'success' ? (
+                                <CheckCircle2 className="size-4" aria-hidden="true" />
+                              ) : (
+                                <AlertCircle className="size-4" aria-hidden="true" />
+                              )}
+                              <AlertTitle>
+                                {cartFeedback.type === 'success'
+                                  ? 'Đã cập nhật giỏ hàng'
+                                  : 'Không thể thêm vào giỏ'}
+                              </AlertTitle>
+                              <AlertDescription className="flex flex-wrap items-center justify-between gap-2 text-current/90">
+                                <span>{cartFeedback.message}</span>
+                                {cartFeedback.type === 'success' && (
+                                  <Link
+                                    to="/cart"
+                                    className="font-semibold underline underline-offset-2 hover:opacity-80"
+                                  >
+                                    Xem giỏ hàng →
+                                  </Link>
+                                )}
+                              </AlertDescription>
+                            </Alert>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
+
                   <div className="space-y-2 border-t border-border/60 pt-4">
                     <h2 className="text-sm font-semibold text-foreground">
                       Mô tả sản phẩm
@@ -218,7 +435,7 @@ export function ProductDetailPage() {
                 </CardContent>
               </Card>
             </div>
-          </div>
+          </motion.div>
         ) : null}
       </div>
     </AppShell>

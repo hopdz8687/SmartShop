@@ -2,11 +2,13 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AccountPage } from '@/features/auth/pages/AccountPage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { RegisterPage } from '@/features/auth/pages/RegisterPage'
+import { CartPage } from '@/features/cart/pages/CartPage'
 import { AdminCategoriesPage } from '@/features/catalog/pages/AdminCategoriesPage'
 import { ProductDetailPage } from '@/features/catalog/pages/ProductDetailPage'
 import { ProductsPage } from '@/features/catalog/pages/ProductsPage'
 import { SellerProductFormPage } from '@/features/catalog/pages/SellerProductFormPage'
 import { SellerProductsPage } from '@/features/catalog/pages/SellerProductsPage'
+import { CheckoutPage } from '@/features/order/pages/CheckoutPage'
 import { AdminSellerApplicationsPage } from '@/features/store/pages/AdminSellerApplicationsPage'
 import { SellerApplicationPage } from '@/features/store/pages/SellerApplicationPage'
 import { SellerStorePage } from '@/features/store/pages/SellerStorePage'
@@ -26,6 +28,8 @@ export function AppRouter() {
           <Route path="/account" element={<AccountPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['CUSTOMER']} />}>

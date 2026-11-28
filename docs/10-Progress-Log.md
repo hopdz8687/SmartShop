@@ -289,3 +289,27 @@ Mỗi lần cập nhật phải ghi ngày, thay đổi thực tế, file/module 
 - **Chưa xác minh / Lưu ý**:
   - Theo `docs/12-Decision-Log.md`, công thức phân bổ phí ship/giảm giá chưa được chốt nên MVP gán `shippingFee = 0` và `discountAmount = 0` trên cả Order cha và Seller Order con.
   - Chưa triển khai xem/hủy Order/Seller Order, Shipment và Address CRUD (ngoài phạm vi Task 06).
+
+### Task 06 – Frontend Cart & Checkout
+
+**Ngày hoàn thành:** 28/11/2026
+
+- **Thay đổi thực tế**:
+  - Cài đặt `framer-motion` (tương thích React 19, bọc `<MotionConfig reducedMotion="user">` tại `App.jsx`) và bổ sung `Skeleton` component theo chuẩn shadcn/ui.
+  - Bổ sung badge giỏ hàng động có slot cố định (`AnimatePresence` / `motion.span`) trên `AppShell.jsx`.
+  - Nâng cấp `ProductDetailPage.jsx`: thêm skeleton loading, bộ chọn số lượng theo tồn kho, nút `Thêm vào giỏ hàng`, nút `Mua ngay` và banner phản hồi mượt mà.
+  - Triển khai `CartPage.jsx` (`/cart`): skeleton, empty state, nhóm sản phẩm theo từng cửa hàng (`Store`), chọn từng sản phẩm / theo cửa hàng / chọn tất cả, chỉnh số lượng, xóa item với hiệu ứng `AnimatePresence`, và summary sticky bên phải.
+  - Triển khai `CheckoutPage.jsx` (`/checkout`): bước xác nhận, Focusable Error Summary theo chuẩn UI UX Pro Max, form địa chỉ người nhận (React Hook Form + Zod), hiển thị phân tách đơn theo cửa hàng & COD, màn hình đặt hàng thành công hiển thị mã Order tổng và từng Seller Order con.
+- **File tạo mới / chỉnh sửa**:
+  - `frontend/package.json` (`framer-motion`)
+  - `frontend/src/App.jsx`, `frontend/src/components/ui/skeleton.jsx`, `frontend/src/components/layout/AppShell.jsx`, `frontend/src/routes/AppRouter.jsx`
+  - `frontend/src/features/catalog/pages/ProductDetailPage.jsx`
+  - `frontend/src/features/cart/{api/cartApi.js,hooks/useCart.js,pages/CartPage.jsx}`
+  - `frontend/src/features/order/{api/orderApi.js,schemas/checkoutSchema.js,pages/CheckoutPage.jsx}`
+- **Lệnh & kết quả kiểm thử**:
+  - `npm.cmd run lint` (`oxlint`): **PASS** (0 errors, 3 warnings có sẵn từ Task 04/05).
+  - `npm.cmd run build` (`vite build`): **PASS** (1.88s).
+- **Chưa xác minh / Lưu ý**:
+  - Chưa chạy kiểm thử E2E trên trình duyệt kết nối trực tiếp với backend server đang chạy (`localhost:8080`).
+- **Bước tiếp theo**:
+  - Kiểm thử luồng E2E từ xem sản phẩm → thêm giỏ → checkout đa cửa hàng, sau đó triển khai Task 07 (Order History, Seller Order Management, Cancellation & Shipment/COD).
