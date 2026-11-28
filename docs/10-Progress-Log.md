@@ -267,3 +267,25 @@ Mỗi lần cập nhật phải ghi ngày, thay đổi thực tế, file/module 
   - Chưa chạy kiểm thử E2E trên trình duyệt kết nối trực tiếp frontend với backend server đang chạy.
 - **Bước tiếp theo**:
   - Tiếp tục Task 06: Cart & Checkout (Backend + Frontend) theo `docs/04` và `docs/07`.
+
+
+### Task 06 – Cart & Checkout (Backend)
+
+**Ngày hoàn thành:** 28/11/2026
+
+- **Phạm vi**: Cart CRUD (`GET /api/v1/cart`, `POST /api/v1/cart/items`, `PUT /api/v1/cart/items/{id}`, `DELETE /api/v1/cart/items/{id}`) và Checkout đa cửa hàng (`POST /api/v1/orders`).
+- **File tạo mới / chỉnh sửa**:
+  - `backend/.../cart/entity/{Cart,CartItem}.java`, `backend/.../cart/repository/{CartRepository,CartItemRepository}.java`
+  - `backend/.../cart/dto/{AddCartItemRequest,UpdateCartItemRequest,CartItemResponse,CartResponse}.java`
+  - `backend/.../cart/service/CartService.java`, `backend/.../cart/controller/CartController.java`
+  - `backend/.../order/entity/{Order,OrderStatus,SellerOrder,SellerOrderStatus,OrderItem,Payment,PaymentMethod,PaymentStatus}.java`
+  - `backend/.../order/repository/{OrderRepository,SellerOrderRepository,OrderItemRepository,PaymentRepository}.java`
+  - `backend/.../order/dto/{CheckoutRequest,OrderItemResponse,PaymentResponse,SellerOrderResponse,OrderResponse}.java`
+  - `backend/.../order/service/CheckoutService.java`, `backend/.../order/controller/OrderController.java`
+  - `backend/.../catalog/repository/ProductVariantRepository.java` (bổ sung atomic conditional update `decrementStockIfAvailable`)
+  - `backend/src/test/java/com/smartshop/modules/order/CartAndCheckoutIntegrationTest.java`
+- **Lệnh & kết quả kiểm thử**:
+  - `.\mvnw.cmd test`: **BUILD SUCCESS** — **Tests run: 49, Failures: 0, Errors: 0, Skipped: 0** (thêm 5 test mới cho Cart CRUD, quyền sở hữu, checkout nhiều Store + xóa đúng item được chọn, và rollback toàn bộ khi thiếu tồn kho).
+- **Chưa xác minh / Lưu ý**:
+  - Theo `docs/12-Decision-Log.md`, công thức phân bổ phí ship/giảm giá chưa được chốt nên MVP gán `shippingFee = 0` và `discountAmount = 0` trên cả Order cha và Seller Order con.
+  - Chưa triển khai xem/hủy Order/Seller Order, Shipment và Address CRUD (ngoài phạm vi Task 06).
