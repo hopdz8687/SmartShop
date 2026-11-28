@@ -330,3 +330,24 @@ Mỗi lần cập nhật phải ghi ngày, thay đổi thực tế, file/module 
   - `.\mvnw.cmd test`: **BUILD SUCCESS** — **Tests run: 51, Failures: 0, Errors: 0, Skipped: 0** (thêm 2 test mới kiểm tra danh sách phân trang, chi tiết đầy đủ, lỗi 404 không tồn tại và 403 truy cập đơn người khác).
 - **Chưa xác minh / Lưu ý**:
   - Chưa triển khai Seller Order Management, Cancellation và Shipment (thuộc các task sau của Task 07).
+
+### Task 07.2 – Frontend Order History
+
+**Ngày hoàn thành:** 28/11/2026
+
+- **Thay đổi thực tế**:
+  - Mở rộng `orderApi.js` với `getMyOrders` (`GET /orders/my`) và `getOrderDetail` (`GET /orders/{id}`).
+  - Tạo `OrderStatusBadge.jsx` hiển thị trạng thái đơn hàng (`OrderStatus` / `SellerOrderStatus`) và thanh toán COD (`PaymentStatus`) bằng tiếng Việt với màu sắc phân biệt rõ ràng.
+  - Tạo `OrdersPage.jsx` (`/orders`): danh sách đơn hàng phân trang, mã đơn, ngày đặt, tổng tiền, danh sách cửa hàng, loading skeleton, empty state, error state.
+  - Tạo `OrderDetailPage.jsx` (`/orders/:id`): thông tin người nhận & địa chỉ snapshot, chi tiết từng `SellerOrder`, sản phẩm, giá, số lượng và thanh toán COD.
+  - Cập nhật `AppShell.jsx` (thêm liên kết **Đơn mua** cho `CUSTOMER`), `CheckoutPage.jsx` (thêm liên kết **Xem chi tiết đơn hàng** và **Đơn mua của tôi** sau khi đặt hàng thành công) và `AppRouter.jsx` (bảo vệ `/orders` và `/orders/:id` chỉ cho `CUSTOMER`).
+- **File tạo mới / chỉnh sửa**:
+  - `frontend/src/features/order/{api/orderApi.js,components/OrderStatusBadge.jsx,pages/OrdersPage.jsx,pages/OrderDetailPage.jsx,pages/CheckoutPage.jsx}`
+  - `frontend/src/components/layout/AppShell.jsx`, `frontend/src/routes/AppRouter.jsx`
+- **Lệnh & kết quả kiểm thử**:
+  - `npm.cmd run lint` (`oxlint`): **PASS** (0 errors, 3 warnings có sẵn từ trước).
+  - `npm.cmd run build` (`vite build`): **PASS** (1.93s).
+- **Chưa xác minh / Lưu ý**:
+  - Chưa chạy kiểm thử trình duyệt E2E kết nối trực tiếp với backend server đang chạy (`localhost:8080`).
+- **Bước tiếp theo**:
+  - Triển khai các phần tiếp theo của Task 07 (Seller Order Management, Hủy đơn hàng, Shipment & COD confirmation).

@@ -9,6 +9,8 @@ import { ProductsPage } from '@/features/catalog/pages/ProductsPage'
 import { SellerProductFormPage } from '@/features/catalog/pages/SellerProductFormPage'
 import { SellerProductsPage } from '@/features/catalog/pages/SellerProductsPage'
 import { CheckoutPage } from '@/features/order/pages/CheckoutPage'
+import { OrderDetailPage } from '@/features/order/pages/OrderDetailPage'
+import { OrdersPage } from '@/features/order/pages/OrdersPage'
 import { AdminSellerApplicationsPage } from '@/features/store/pages/AdminSellerApplicationsPage'
 import { SellerApplicationPage } from '@/features/store/pages/SellerApplicationPage'
 import { SellerStorePage } from '@/features/store/pages/SellerStorePage'
@@ -33,6 +35,8 @@ export function AppRouter() {
         </Route>
 
         <Route element={<ProtectedRoute allowedRoles={['CUSTOMER']} />}>
+          <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/orders/:id" element={<OrderDetailPage />} />
           <Route path="/seller-application" element={<SellerApplicationPage />} />
         </Route>
 

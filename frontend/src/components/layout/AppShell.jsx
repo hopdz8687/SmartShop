@@ -7,6 +7,7 @@ import {
   Loader2,
   LogOut,
   Package,
+  ReceiptText,
   ShoppingBag,
   ShoppingCart,
   Store,
@@ -69,10 +70,16 @@ export function AppShell({ children }) {
             </NavLink>
 
             {isCustomer && (
-              <NavLink to="/seller-application" className={navLinkClass}>
-                <UserCheck className="size-4" aria-hidden="true" />
-                Đăng ký bán hàng
-              </NavLink>
+              <>
+                <NavLink to="/orders" className={navLinkClass}>
+                  <ReceiptText className="size-4" aria-hidden="true" />
+                  Đơn mua
+                </NavLink>
+                <NavLink to="/seller-application" className={navLinkClass}>
+                  <UserCheck className="size-4" aria-hidden="true" />
+                  Đăng ký bán hàng
+                </NavLink>
+              </>
             )}
 
             {isSeller && (

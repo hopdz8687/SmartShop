@@ -178,13 +178,18 @@ export function CheckoutPage() {
               </div>
               <div className="mt-2 flex flex-wrap justify-center gap-3">
                 <Button asChild>
+                  <Link to={`/orders/${placedOrder.id}`}>
+                    Xem chi tiết đơn hàng
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to="/orders">Đơn mua của tôi</Link>
+                </Button>
+                <Button asChild variant="ghost">
                   <Link to="/products">
                     <ShoppingBag className="size-4" aria-hidden="true" />
                     Tiếp tục mua sắm
                   </Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link to="/cart">Xem giỏ hàng</Link>
                 </Button>
               </div>
             </CardContent>
