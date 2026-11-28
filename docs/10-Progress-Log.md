@@ -1,6 +1,6 @@
 # 10. Nhật ký tiến độ SmartShop
 
-**Ngày cập nhật:** 26/11/2026
+**Ngày cập nhật:** 28/11/2026
 
 ## 10.1. Trạng thái tổng quan
 
@@ -10,13 +10,13 @@
 | Quy tắc nghiệp vụ Order/Cancel/Stock | Đã chốt | Xem docs/04 và docs/12 |
 | Database schema v2.1 | Đã chốt để triển khai | 24 bảng; MariaDB 10.11 import test được báo cáo thành công |
 | Tài liệu AI agent | Đã bổ sung | AGENTS.md, Copilot, Antigravity rules |
-| Spring Boot project | Chưa xác nhận đã khởi tạo | Chuẩn bị môi trường và khởi tạo sau khi kiểm tra toolchain |
+| Spring Boot project | Đã khởi tạo & hoạt động | Java 21, Spring Boot, Flyway, JWT, Store/Seller, Catalog |
 | Flyway migration trong repo ứng dụng | Đã có `V1__init_schema.sql` | Khớp DDL v2.1; `ddl-auto=none` |
-| Entity/Repository | Đang triển khai (Task 01 hoàn thành) | Đã hoàn thành `User`, `Role`, `UserRole` + Repository + Integration Test |
-| Spring Security/JWT | Đã triển khai (Task 02 hoàn thành) | JJWT 0.12.6, Register/Login/Logout, `/api/v1/users/me`, RBAC |
-| ReactJS Frontend | Đang triển khai (Task 03 hoàn thành) | Login, Register, Account (`/api/v1/users/me`), JWT Axios + TanStack Query |
+| Entity/Repository | Đang triển khai (Task 01, 04, 05 hoàn thành) | `User`, `Role`, `UserRole`, `SellerApplication`, `Store`, `Category`, `Product`, `ProductVariant`, `ProductImage` |
+| Spring Security/JWT | Đã triển khai (Task 02, 04, 05) | JJWT 0.12.6, Register/Login/Logout, `/api/v1/users/me`, RBAC |
+| ReactJS Frontend | Đang triển khai (Task 03, 04, 05 hoàn thành) | Auth, Store & Seller, Category & Product (Admin/Seller/Customer) |
 | AI integration | Chưa triển khai | MVP theo flow hai bước |
-| Automated tests | Chưa triển khai | Phải thêm theo từng module |
+| Automated tests | Đang triển khai theo module | Backend: 44/44 tests PASS (`mvnw.cmd test`) |
 | Docker/CI/CD/Deployment | Chưa triển khai | Để giai đoạn sau |
 
 ## 10.2. Các quyết định đã chốt
@@ -211,3 +211,59 @@ Mỗi lần cập nhật phải ghi ngày, thay đổi thực tế, file/module 
 - **Bước tiếp theo**:
   - Frontend Task 04: giao diện đăng ký Seller, Admin duyệt/từ chối, Seller quản lý Store.
   - Hoặc tiếp tục backend: Category, Product, Product Variant.
+
+
+### Task 04 – Frontend Store & Seller
+
+**Ngày hoàn thành:** 28/11/2026
+
+- **Thay đổi thực tế**:
+  - Tạo `AppShell.jsx` làm layout chung với thanh điều hướng responsive theo vai trò (`CUSTOMER`, `SELLER`, `ADMIN`), tái sử dụng Design System xanh dương.
+  - Khách hàng: trang `SellerApplicationPage.jsx` gửi hồ sơ đăng ký Seller, xem lịch sử và hủy hồ sơ đang chờ (`PENDING`).
+  - Admin: trang `AdminSellerApplicationsPage.jsx` lọc theo trạng thái, phân trang, xem chi tiết, duyệt hoặc từ chối (kèm lý do) hồ sơ.
+  - Seller: trang `SellerStorePage.jsx` xem và cập nhật thông tin cửa hàng (`storeName`, `contactEmail`, `contactPhone`, `logoUrl`, `description`).
+- **File tạo mới / chỉnh sửa**:
+  - `frontend/src/components/layout/AppShell.jsx`
+  - `frontend/src/features/store/api/storeApi.js`, `frontend/src/features/store/schemas/storeSchemas.js`, `frontend/src/features/store/components/StoreStatusBadge.jsx`
+  - `frontend/src/features/store/pages/{SellerApplicationPage,AdminSellerApplicationsPage,SellerStorePage}.jsx`
+  - `frontend/src/routes/AppRouter.jsx`, `frontend/src/features/auth/pages/AccountPage.jsx`
+- **Lệnh & kết quả kiểm thử**:
+  - `npm.cmd run lint` (`oxlint`): **PASS** (0 errors, 2 warnings).
+  - `npm.cmd run build` (`vite build`): **PASS** (2.50s).
+
+### Task 05 – Category & Product (Backend)
+
+**Ngày hoàn thành:** 28/11/2026
+
+- **Phạm vi**: CRUD Category (Admin), CRUD Product + Variant + Image (Seller theo Store sở hữu), Public Catalog & Search (lọc giá/sắp xếp theo Variant), Admin quản lý trạng thái Product.
+- **File tạo mới / chỉnh sửa**:
+  - `backend/src/main/java/com/smartshop/common/util/SlugUtils.java`
+  - `backend/.../catalog/entity/{Category,CategoryStatus,Product,ProductStatus,ProductVariant,VariantStatus,ProductImage}.java`
+  - `backend/.../catalog/repository/{CategoryRepository,ProductRepository,ProductVariantRepository,ProductImageRepository}.java`
+  - `backend/.../catalog/dto/*` (11 DTOs)
+  - `backend/.../catalog/service/{CategoryService,ProductService}.java`
+  - `backend/.../catalog/controller/{PublicCategoryController,AdminCategoryController,PublicProductController,AdminProductController,SellerProductController}.java`
+  - `backend/src/main/java/com/smartshop/security/SecurityConfig.java` (mở `permitAll()` cho `GET /api/v1/categories`, `GET /api/v1/products/**`)
+  - `backend/src/test/java/com/smartshop/modules/catalog/CatalogIntegrationTest.java`
+- **Lệnh & kết quả kiểm thử**:
+  - `.\mvnw.cmd test`: **BUILD SUCCESS** — **Tests run: 44, Failures: 0, Errors: 0, Skipped: 0**.
+
+### Task 05 – Frontend Category & Product
+
+**Ngày hoàn thành:** 28/11/2026
+
+- **Thay đổi thực tế**:
+  - Customer: `ProductsPage.jsx` (tìm kiếm từ khóa, lọc danh mục chip `flex-wrap`, khoảng giá, sắp xếp `newest`/`price_asc`/`price_desc`, phân trang) và `ProductDetailPage.jsx` (thư viện ảnh, chọn Variant xem giá/SKU/tồn kho).
+  - Admin: `AdminCategoriesPage.jsx` (tạo, sửa, phân cấp danh mục cha, ẩn danh mục).
+  - Seller: `SellerProductsPage.jsx` và `SellerProductFormPage.jsx` (tạo sản phẩm kèm nhiều biến thể, sửa thông tin, thêm/sửa/ngừng bán biến thể, thêm/xóa hình ảnh).
+- **File tạo mới / chỉnh sửa**:
+  - `frontend/src/features/catalog/api/catalogApi.js`, `frontend/src/features/catalog/schemas/catalogSchemas.js`, `frontend/src/features/catalog/utils/catalogFormatters.js`
+  - `frontend/src/features/catalog/pages/{ProductsPage,ProductDetailPage,AdminCategoriesPage,SellerProductsPage,SellerProductFormPage}.jsx`
+  - `frontend/src/components/layout/AppShell.jsx`, `frontend/src/routes/AppRouter.jsx`
+- **Lệnh & kết quả kiểm thử**:
+  - `npm.cmd run lint` (`oxlint`): **PASS** (0 errors, 3 warnings).
+  - `npm.cmd run build` (`vite build`): **PASS** (1.88s).
+- **Chưa xác minh / Lưu ý**:
+  - Chưa chạy kiểm thử E2E trên trình duyệt kết nối trực tiếp frontend với backend server đang chạy.
+- **Bước tiếp theo**:
+  - Tiếp tục Task 06: Cart & Checkout (Backend + Frontend) theo `docs/04` và `docs/07`.
